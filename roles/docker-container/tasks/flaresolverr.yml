@@ -1,0 +1,19 @@
+---
+- name: Create Flaresolverr container
+  become: true
+  become_user: "{{ username }}"
+  community.docker.docker_container:
+    name: flaresolverr
+    image: "ghcr.io/flaresolverr/flaresolverr:latest"
+    pull: true
+    state: started
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+      "LOG_LEVEL": "${LOG_LEVEL:-info}"
+      "LOG_HTML": "${LOG_HTML:-false}"
+      "CAPTCHA_SOLVER": "${CAPTCHA_SOLVER:-none}"
+    restart_policy: unless-stopped
+    ports:
+      - 8191:8191

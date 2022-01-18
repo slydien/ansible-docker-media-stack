@@ -1,0 +1,25 @@
+---
+- name: Install needed packages
+  package:
+    name:
+      - git
+      - stow
+
+- name: Install dotfiles via Stow
+  when: install_dotfiles | default(false)
+  become: true
+  become_user: "{{ username }}"
+  block:
+
+  - name: Clone the latest dotfiles repo
+    git:
+      repo: "{{ dotfiles_repo }}"
+      dest: /home/{{ username }}/dotfiles
+      recursive: no
+      force: yes
+      version: master
+
+  - name: Stow the dotfiles
+    shell: cd /home/{{ username }}/dotfiles && stow -v */
+    register: stow_result
+    changed_when: stow_result.stdout != ""

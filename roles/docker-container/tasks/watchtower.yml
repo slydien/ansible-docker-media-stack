@@ -1,0 +1,12 @@
+---
+- name: Create Watchtower container
+  become: true
+  become_user: "{{ username }}"
+  community.docker.docker_container:
+    name: watchtower
+    image: "containrrr/watchtower"
+    pull: true
+    state: started
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    restart_policy: unless-stopped

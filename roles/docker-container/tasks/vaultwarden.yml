@@ -1,0 +1,67 @@
+---
+- name: Create Vaultwarden folder if enable_persistent_data is false
+  when: not enable_persistent_data
+  file:
+    path: "{{ docker_data_path }}/bitwardenrs/data"
+    state: directory
+    mode: 0765
+    owner: "{{ username }}"
+    group: "{{ username }}"
+
+- name: Create Vaultwarden container
+  become: true
+  become_user: "{{ username }}"
+  when: not enable_traefik
+  community.docker.docker_container:
+    name: vaultwarden
+    image: "vaultwarden/server:latest"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/bitwardenrs/data:/data"
+    env:
+      "WEBSOCKET_ENABLED": "true"
+      "SIGNUPS_ALLOWED": "true"
+      "ADMIN_TOKEN": "hh2cZmf3dMWmra+BHeT/PZDNVGHQToBdtD1/ZCgeEOGlZoG85wO+a+dOE3TUUUDF # openssl rand -base64 48"
+      "DOMAIN": "https://pass.{{ dns_domain_name }}"
+      "ROCKET_PORT": "8080"
+    restart_policy: unless-stopped
+    user: "1000:1000"
+
+- name: Create Vaultwarden container with Traefik Labels
+  become: true
+  become_user: "{{ username }}"
+  when: enable_traefik
+  community.docker.docker_container:
+    name: vaultwarden
+    image: "vaultwarden/server:latest"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/bitwardenrs/data:/data"
+    env:
+      "WEBSOCKET_ENABLED": "true"
+      "SIGNUPS_ALLOWED": "true"
+      "ADMIN_TOKEN": "hh2cZmf3dMWmra+BHeT/PZDNVGHQToBdtD1/ZCgeEOGlZoG85wO+a+dOE3TUUUDF # openssl rand -base64 48"
+      "DOMAIN": "https://pass.{{ dns_domain_name }}"
+      "ROCKET_PORT": "8080"
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ docker_proxy_network }}"
+    user: "1000:1000"
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.routers.bitwarden-ui.entrypoints": "http"
+      "traefik.http.routers.bitwarden-ui.rule": "Host(`pass.{{ dns_domain_name }}`)"
+      "traefik.http.middlewares.bitwarden-ui-https-redirect.redirectscheme.scheme": "https"
+      "traefik.http.routers.bitwarden-ui.middlewares": "bitwarden-ui-https-redirect"
+      "traefik.http.routers.bitwarden-ui-secure.entrypoints": "https"
+      "traefik.http.routers.bitwarden-ui-secure.rule": "Host(`pass.{{ dns_domain_name }}`)"
+      "traefik.http.routers.bitwarden-ui-secure.tls": "true"
+      "traefik.http.routers.bitwarden-ui-secure.service": "bitwarden-ui"
+      "traefik.http.services.bitwarden-ui.loadbalancer.server.port": "8080"
+      "traefik.http.routers.bitwarden-websocket-http.rule": "Host(`pass.{{ dns_domain_name }}`) && Path(`/notifications/hub`)"
+      "traefik.http.routers.bitwarden-websocket-http.entrypoints": "http"
+      "traefik.http.routers.bitwarden-websocket-http.service": "bitwarden-websocket"
+      "traefik.http.services.bitwarden-websocket.loadbalancer.server.port": "3012"
+      "traefik.docker.network": "proxy"

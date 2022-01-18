@@ -1,0 +1,61 @@
+---
+- name: Create Overseerr folder if enable_persistent_data is false
+  when: not enable_persistent_data
+  file:
+    path: "{{ docker_data_path }}/overseerr/config"
+    state: directory
+    mode: 0765
+    owner: "{{ username }}"
+    group: "{{ username }}"
+
+- name: Create Overseerr container
+  become: true
+  become_user: "{{ username }}"
+  when: not enable_traefik
+  community.docker.docker_container:
+    name: overseerr
+    image: "lscr.io/linuxserver/overseerr"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/overseerr/config:/config:rw"
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+    restart_policy: unless-stopped
+    ports:
+      - 5055:5055
+
+- name: Create Overseerr container with Traefik Labels
+  become: true
+  become_user: "{{ username }}"
+  when: enable_traefik
+  community.docker.docker_container:
+    name: overseerr
+    image: "lscr.io/linuxserver/overseerr"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/overseerr/config:/config:rw"
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ docker_proxy_network }}"
+    ports:
+      - 5055:5055
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.routers.overseerr.entrypoints": "http"
+      "traefik.http.routers.overseerr.rule": "Host(`overseerr.{{ dns_domain_name }}`)"
+      "traefik.http.middlewares.overseerr-https-redirect.redirectscheme.scheme": "https"
+      "traefik.http.routers.overseerr.middlewares": "overseerr-https-redirect"
+      "traefik.http.routers.overseerr-secure.entrypoints": "https"
+      "traefik.http.routers.overseerr-secure.rule": "Host(`overseerr.{{ dns_domain_name }}`)"
+      "traefik.http.routers.overseerr-secure.tls": "true"
+      "traefik.http.routers.overseerr-secure.service": "overseerr"
+      "traefik.http.services.overseerr.loadbalancer.server.port": "5055"
+      "traefik.docker.network": "{{ docker_proxy_network }}"

@@ -1,0 +1,14 @@
+---
+docker_data_path: "/opt/dockerdata"
+timezone: "Europe/Paris"
+docker_proxy_network: proxy
+volume_bind_download: "/mnt/downloads"
+volume_bind_download_torrent_complete: "{{ volume_bind_download }}/torrent/complete"
+volume_bind_download_torrent_incomplete: "{{ volume_bind_download }}/torrent/incomplete"
+volume_bind_download_torrent_watch: "{{ volume_bind_download }}/torrent/watch"
+volume_bind_gmedia_series: "/mnt/media/series"
+volume_bind_gmedia_movies: "/mnt/media/films"
+volume_bind_gmedia_anime: "/mnt/media/anime"
+dns_domain_name: "your_dns_domain_name"
+cert_resolver: "your_certification_resolver"
+transmission_openvpn_vpn_provider: "your_vpn_provider"

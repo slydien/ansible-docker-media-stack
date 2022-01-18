@@ -1,0 +1,72 @@
+---
+- name: Create Sonarr folder if enable_persistent_data is false
+  when: not enable_persistent_data
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0765
+    owner: "{{ username }}"
+    group: "{{ username }}"
+  with_items:
+    - "{{ docker_data_path }}/sonarr/config"
+    - "{{ volume_bind_download }}"
+    - "{{ volume_bind_gmedia_series }}"
+    - "{{ volume_bind_gmedia_anime }}"
+
+- name: Create Sonarr container
+  become: true
+  become_user: "{{ username }}"
+  when: not enable_traefik
+  community.docker.docker_container:
+    name: sonarr
+    image: "ghcr.io/linuxserver/sonarr"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/sonarr/config:/config:rw"
+      - "{{ volume_bind_gmedia_series }}:/series:rw"
+      - "{{ volume_bind_gmedia_anime }}:/anime:rw"
+      - "{{ volume_bind_download }}:/downloads:rw"
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+    restart_policy: unless-stopped
+    ports:
+      - 8989:8989
+
+- name: Create Sonarr container with Traefik Labels
+  become: true
+  become_user: "{{ username }}"
+  when: enable_traefik
+  community.docker.docker_container:
+    name: sonarr
+    image: "ghcr.io/linuxserver/sonarr"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/sonarr/config:/config:rw"
+      - "{{ volume_bind_gmedia_series }}:/series:rw"
+      - "{{ volume_bind_gmedia_anime }}:/anime:rw"
+      - "{{ volume_bind_download }}:/downloads:rw"
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ docker_proxy_network }}"
+    ports:
+      - 8989:8989
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.routers.sonarr.entrypoints": "http"
+      "traefik.http.routers.sonarr.rule": "Host(`sonarr.{{ dns_domain_name }}`)"
+      "traefik.http.middlewares.sonarr-https-redirect.redirectscheme.scheme": "https"
+      "traefik.http.routers.sonarr.middlewares": "sonarr-https-redirect"
+      "traefik.http.routers.sonarr-secure.entrypoints": "https"
+      "traefik.http.routers.sonarr-secure.rule": "Host(`sonarr.{{ dns_domain_name }}`)"
+      "traefik.http.routers.sonarr-secure.tls": "true"
+      "traefik.http.routers.sonarr-secure.service": "sonarr"
+      "traefik.http.services.sonarr.loadbalancer.server.port": "8989"
+      "traefik.docker.network": "{{ docker_proxy_network }}"

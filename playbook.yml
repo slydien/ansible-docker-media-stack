@@ -1,0 +1,24 @@
+---
+- hosts: all
+  become: true
+
+  pre_tasks:
+    - import_tasks: tasks/ssh_juggle_port.yml
+
+  tasks:
+    - name: Include the system role
+      include_role:
+        name: system
+    - name: Include the geerlingguy.repo-epel role for Redhat
+      include_role:
+        name: geerlingguy.repo-epel
+      when: ansible_os_family == 'Redhat'
+    - name: Include the geerlingguy.pip role
+      include_role:
+        name: geerlingguy.pip
+    - name: Include the geerlingguy.docker role
+      include_role:
+        name: geerlingguy.docker
+    - name: Include the docker-container role
+      include_role:
+        name: docker-container

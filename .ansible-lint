@@ -1,0 +1,6 @@
+skip_list:
+  - '403'
+  - unnamed-task
+  - 'risky-shell-pipe'
+  - 'role-name'
+  - 'yaml'

@@ -1,0 +1,93 @@
+---
+- name: Create Proxy network
+  become: true
+  become_user: "{{ username }}"
+  community.docker.docker_network:
+    name: "{{ docker_proxy_network }}"
+    internal: no
+
+- name: Create Traefik folders if enable_persistent_data is false
+  when: not enable_persistent_data
+  block:
+  - name: Create Traefik data folder
+    file:
+      path: "{{ docker_data_path }}/traefik/data"
+      state: directory
+      mode: 0765
+      owner: "{{ username }}"
+      group: "{{ username }}"
+
+  - name: Stat over traefik.yml & config.yml
+    stat:
+      path: "{{ my_loop }}"
+    loop:
+      - "{{ docker_data_path }}/traefik/data/traefik.yml"
+      - "{{ docker_data_path }}/traefik/data/config.yml"
+    loop_control:
+      loop_var: my_loop
+    register: my_stat_var
+
+  - name: Create the files if they don't exist
+    file:
+      path: "{{ item.my_loop }}"
+      owner: "{{ username }}"
+      group: "{{ username }}"
+      mode: 0765
+      state: "{{ 'file' if item.stat.exists else 'touch' }}"
+    loop: "{{ my_stat_var.results }}"
+
+  - name: Check if acme.json exists in Traefik data folder
+    stat:
+      path: "{{ docker_data_path }}/traefik/data/acme.json"
+    register: acme_file
+
+  - name: Create acme.json file in data folder
+    file:
+      path: "{{ docker_data_path }}/traefik/data/acme.json"
+      state: "{{ 'file' if acme_file.stat.exists else 'touch' }}"
+      mode: 0600
+      owner: "{{ username }}"
+      group: "{{ username }}"
+
+- name: Create Traefik container
+  become: true
+  become_user: "{{ username }}"
+  community.docker.docker_container:
+    name: traefik
+    image: traefik:latest
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/traefik/data/traefik.yml:/traefik.yml:ro"
+      - "{{ docker_data_path }}/traefik/data/acme.json:/acme.json"
+      - "{{ docker_data_path }}/traefik/data/config.yml:/config.yml:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+      "CF_API_EMAIL": "{{ cloudflare_email }}"
+      "CF_API_KEY": "{{ cloudflare_api_key }}"
+    security_opts:
+      - "no-new-privileges:true"
+    restart_policy: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - name: "{{ docker_proxy_network }}"
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.routers.traefik.entrypoints": "http"
+      "traefik.http.routers.traefik.rule": "Host(`traefik-dashboard.{{ dns_domain_name }}`)"
+      "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme": "https"
+      "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto": "https"
+      "traefik.http.routers.traefik.middlewares": "traefik-https-redirect"
+      "traefik.http.routers.traefik-secure.entrypoints": "https"
+      "traefik.http.routers.traefik-secure.rule": "Host(`traefik-dashboard.{{ dns_domain_name }}`)"
+      "traefik.http.routers.traefik-secure.tls": "true"
+      "traefik.http.routers.traefik-secure.tls.certresolver": "{{ cert_resolver }}"
+      "traefik.http.routers.traefik-secure.tls.domains[0].main": "{{ dns_domain_name }}"
+      "traefik.http.routers.traefik-secure.tls.domains[0].sans": "*.{{ dns_domain_name }}"
+      "traefik.http.routers.traefik-secure.service": "api@internal"

@@ -1,0 +1,63 @@
+---
+- name: Create Prowlarr folder if enable_persistent_data is false
+  when: not enable_persistent_data
+  file:
+    path: "{{ docker_data_path }}/prowlarr/config"
+    state: directory
+    mode: 0765
+    owner: "{{ username }}"
+    group: "{{ username }}"
+
+- name: Create Prowlarr container
+  become: true
+  become_user: "{{ username }}"
+  when: not enable_traefik
+  community.docker.docker_container:
+    name: prowlarr
+    image: "ghcr.io/linuxserver/prowlarr:develop"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/prowlarr/config:/config:rw"
+      - "{{ volume_bind_download_torrent_watch }}:/downloads:rw"
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+    restart_policy: unless-stopped
+    ports:
+      - 9696:9696
+
+- name: Create Prowlarr container with Traefik Labels
+  become: true
+  become_user: "{{ username }}"
+  when: enable_traefik
+  community.docker.docker_container:
+    name: prowlarr
+    image: "ghcr.io/linuxserver/prowlarr:develop"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/prowlarr/config:/config:rw"
+      - "{{ volume_bind_download_torrent_watch }}:/downloads:rw"
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ docker_proxy_network }}"
+    ports:
+      - 9696:9696
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.routers.prowlarr.entrypoints": "http"
+      "traefik.http.routers.prowlarr.rule": "Host(`prowlarr.{{ dns_domain_name }}`)"
+      "traefik.http.middlewares.prowlarr-https-redirect.redirectscheme.scheme": "https"
+      "traefik.http.routers.prowlarr.middlewares": "prowlarr-https-redirect"
+      "traefik.http.routers.prowlarr-secure.entrypoints": "https"
+      "traefik.http.routers.prowlarr-secure.rule": "Host(`prowlarr.{{ dns_domain_name }}`)"
+      "traefik.http.routers.prowlarr-secure.tls": "true"
+      "traefik.http.routers.prowlarr-secure.service": "prowlarr"
+      "traefik.http.services.prowlarr.loadbalancer.server.port": "9696"
+      "traefik.docker.network": "{{ docker_proxy_network }}"

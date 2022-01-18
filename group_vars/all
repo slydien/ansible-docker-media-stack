@@ -1,0 +1,66 @@
+username: lydien
+username_uid: 1000
+username_gid: 1000
+shell: /bin/bash
+locale: en_US.UTF-8
+keyboard_layout: fr
+enable_ssh_authentification: false
+dotfiles_repo: https://github.com/zedxlucian/dotfiles
+install_dotfiles: true
+enable_snap: false
+enable_samba: true
+version: focal
+apt_mirror: http://www-ftp.lip6.fr/pub/linux/distributions/Ubuntu/archive/
+
+# Docker variables from geerlingguy.docker
+docker_edition: 'ce'
+docker_package: "docker-{{ docker_edition }}"
+docker_package_state: present
+docker_service_state: started
+docker_service_enabled: true
+docker_restart_handler_state: restarted
+docker_install_compose: true
+docker_compose_version: "1.26.0"
+docker_compose_path: /usr/local/bin/docker-compose
+docker_repo_url: https://download.docker.com/linux
+docker_apt_release_channel: stable
+docker_apt_arch: amd64
+docker_apt_repository: "deb [arch={{ docker_apt_arch }}] {{ docker_repo_url }}/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} {{ docker_apt_release_channel }}"
+docker_apt_ignore_key_error: True
+docker_apt_gpg_key: "{{ docker_repo_url }}/{{ ansible_distribution | lower }}/gpg"
+docker_yum_repo_url: "{{ docker_repo_url }}/{{ (ansible_distribution == 'Fedora') | ternary('fedora','centos') }}/docker-{{ docker_edition }}.repo"
+docker_yum_repo_enable_nightly: '0'
+docker_yum_repo_enable_test: '0'
+docker_yum_gpg_key: "{{ docker_repo_url }}/centos/gpg"
+docker_users:
+  - lydien
+docker_daemon_options:
+  storage-driver: "vfs"
+  log-opts:
+    max-size: "100m"
+
+enable_persistent_data: false
+
+# Pip variables from geerlingguy.pip
+pip_package: python3-pip
+pip_executable: pip3
+pip_install_packages:
+  - docker
+
+# Epel repo from geerlingguy.repo-epel
+epel_repo_disable: false
+epel_repo_url: "http://download.fedoraproject.org/pub/epel/{{ ansible_distribution_major_version }}/{{ ansible_userspace_architecture }}{{ '/' if ansible_distribution_major_version < '7' else '/e/' }}epel-release-{{ ansible_distribution_major_version }}-{{ epel_release[ansible_distribution_major_version] }}.noarch.rpm"
+epel_repo_gpg_key_url: "/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}"
+
+# Enable or disable containers
+enable_traefik: false
+enable_homer: true
+enable_portainer: true
+enable_watchtower: true
+enable_flaresolverr: true
+enable_vaultwarden: false
+enable_transmission_openvpn: true
+enable_sonarr: true
+enable_radarr: true
+enable_prowlarr: true
+enable_overseerr: true

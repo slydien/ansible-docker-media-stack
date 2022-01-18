@@ -1,0 +1,6 @@
+---
+transmission_openvpn_vpn_username: "vpn_username"
+transmission_openvpn_vpn_password: "vpn_password"
+
+cloudflare_email: "cloudflare_email"
+cloudflare_api_key: "cloudflare_api_key"

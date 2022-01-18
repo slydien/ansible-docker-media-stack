@@ -1,0 +1,48 @@
+#+TITLE: Docker Media Stack Server via Ansible
+#+OPTIONS: toc:2          (only include two levels in TOC)
+
+* General info
+This will setup Docker with various media automation containers (Sonarr, Radarr, Prowlarr..) on a Debian or RedHat server. This will also setup basic security features on the server.
+
+* Technologies
+Project created with:
++ Ansible version: 2.12.1
++ Molecule version: 3.5.2
++ Podman version: 3.2.1
++ Molecule podman version: 1.0.1
++ Docker version: 20.10.12
+* TODO
++ Add variables to enable/disable containers
++ Find solution for labels if traefik container is disabled
++ Complete this README
++ Add =geerlingguy.security= role from Ansible galaxy
++ Write ansible role for Crowdsec, a great replacement for fail2ban
++ Add =no_log= parameter to tasks with sensitive informations
+* Setup
+** Requirements
+You need to install ansible before you can run this project. It's best to get the latest version of Ansible using pip. Install pip by following instructions at: https://pip.pypa.io/en/stable/cli/pip_install/
+
+and then type this command into a terminal:
+#+begin_src shell
+pip install ansible
+#+end_src
+** Usage
+First clone the repository:
+#+begin_src shell
+git clone https://github.com/zedxlucian/ansible-docker-media-stack.git
+cd ansible-docker-media-stack
+#+end_src
+
+Now, you need to fill some variables before you can run this project. Open the file =group_vars/all= and change the values in the variable according to your needs. Now open the file =group_vars/secret.yml= and change the values.
+
+Now you need to encrypt =group_vars/secret.yml= because it contains sensitive informations. To do so, type this command:
+#+begin_src shell
+ansible-vault encrypt group_vars/secret.yml
+#+end_src
+
+We can finally launch our ansible playbook to install our docker media stack:
+#+begin_src shell
+ansible-playbook -i hosts/<your-host-ip-address> playbook.yml --ask-vault-pass
+#+end_src
+
+Ansible will ask you to provide the password you used to encrypt =group_vars/secret.yml= file. Once entered, it will proceed with the playbook.

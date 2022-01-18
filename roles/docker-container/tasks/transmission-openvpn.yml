@@ -1,0 +1,110 @@
+---
+- name: Create Transmission folder if enable_persistent_data is false
+  when: not enable_persistent_data
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: "{{ username }}"
+    group: "{{ username }}"
+  with_items:
+    - "{{ docker_data_path }}/transmission/config"
+    - "{{ volume_bind_download_torrent_complete }}"
+    - "{{ volume_bind_download_torrent_incomplete }}"
+    - "{{ volume_bind_download_torrent_watch }}"
+
+- name: Create Transmission-OpenVPN container
+  become: true
+  become_user: "{{ username }}"
+  when: not enable_traefik
+  community.docker.docker_container:
+    name: transmission-openvpn
+    image: "haugene/transmission-openvpn"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/transmission/config:/data/transmission-home:rw"
+      - "{{ volume_bind_download }}:/downloads:rw"
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+      "OPENVPN_PROVIDER": "{{ transmission_openvpn_vpn_provider }}"
+      "OPENVPN_USERNAME": "{{ transmission_openvpn_vpn_username }}"
+      "OPENVPN_PASSWORD": "{{ transmission_openvpn_vpn_password }}"
+      "OPENVPN_OPTS": "--inactive 3600 --ping 10 --ping-exit 120 --pull-filter ignore ping"
+      "LOCAL_NETWORK": "192.168.1.0/24"
+      "OVERRIDE_DNS_1": "103.86.96.100"
+      "OVERRIDE_DNS_2": "103.86.99.100"
+      "TRANSMISSION_WEB_UI": "flood-for-transmission"
+      "TRANSMISSION_DOWNLOAD_DIR": "/downloads/torrent/complete"
+      "TRANSMISSION_INCOMPLETE_DIR": "/downloads/torrent/incomplete"
+      "TRANSMISSION_WATCH_DIR": "/downloads/torrent/watch"
+      "TRANSMISSION_WATCH_DIR_FORCE_GENERIC": "true"
+      "GLOBAL_APPLY_PERMISSIONS": "false"
+    restart_policy: unless-stopped
+    ports:
+      - 9091:9091
+      - 3003:3003
+    capabilities:
+      - "NET_ADMIN"
+    log_driver: json-file
+    log_options:
+      "max-size": "10m"
+    devices:
+      - "/dev/net/tun"
+
+- name: Create Transmission-OpenVPN container with Traefik Labels
+  become: true
+  become_user: "{{ username }}"
+  when: enable_traefik
+  community.docker.docker_container:
+    name: transmission-openvpn
+    image: "haugene/transmission-openvpn"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/transmission/config:/data/transmission-home:rw"
+      - "{{ volume_bind_download }}:/downloads:rw"
+    env:
+      "PUID": "{{ username_uid | string }}"
+      "PGID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+      "OPENVPN_PROVIDER": "{{ transmission_openvpn_vpn_provider }}"
+      "OPENVPN_USERNAME": "{{ transmission_openvpn_vpn_username }}"
+      "OPENVPN_PASSWORD": "{{ transmission_openvpn_vpn_password }}"
+      "OPENVPN_OPTS": "--inactive 3600 --ping 10 --ping-exit 120 --pull-filter ignore ping"
+      "LOCAL_NETWORK": "192.168.1.0/24"
+      "OVERRIDE_DNS_1": "103.86.96.100"
+      "OVERRIDE_DNS_2": "103.86.99.100"
+      "TRANSMISSION_WEB_UI": "flood-for-transmission"
+      "TRANSMISSION_DOWNLOAD_DIR": "/downloads/torrent/complete"
+      "TRANSMISSION_INCOMPLETE_DIR": "/downloads/torrent/incomplete"
+      "TRANSMISSION_WATCH_DIR": "/downloads/torrent/watch"
+      "TRANSMISSION_WATCH_DIR_FORCE_GENERIC": "true"
+      "GLOBAL_APPLY_PERMISSIONS": "false"
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ docker_proxy_network }}"
+    ports:
+      - 9091:9091
+      - 3003:3003
+    capabilities:
+      - "NET_ADMIN"
+    log_driver: json-file
+    log_options:
+      "max-size": "10m"
+    devices:
+      - "/dev/net/tun"
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.routers.vpntorrent.entrypoints": "http"
+      "traefik.http.routers.vpntorrent.rule": "Host(`torrent.{{ dns_domain_name }}`)"
+      "traefik.http.middlewares.vpntorrent-https-redirect.redirectscheme.scheme": "https"
+      "traefik.http.routers.vpntorrent.middlewares": "vpntorrent-https-redirect"
+      "traefik.http.routers.vpntorrent-secure.entrypoints": "https"
+      "traefik.http.routers.vpntorrent-secure.rule": "Host(`torrent.{{ dns_domain_name }}`)"
+      "traefik.http.routers.vpntorrent-secure.tls": "true"
+      "traefik.http.routers.vpntorrent-secure.service": "vpntorrent"
+      "traefik.http.services.vpntorrent.loadbalancer.server.port": "9091"
+      "traefik.docker.network": "{{ docker_proxy_network }}"

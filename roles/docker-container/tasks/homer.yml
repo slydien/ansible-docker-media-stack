@@ -1,0 +1,57 @@
+---
+- name: Create Homer data folder when enable_persistent_data is false
+  when: not enable_persistent_data
+  file:
+    path: "{{ docker_data_path }}/homer/assets"
+    state: directory
+    mode: 0765
+    owner: "{{ username }}"
+    group: "{{ username }}"
+
+- name: Create Homer container
+  become: true
+  become_user: "{{ username }}"
+  when: not enable_traefik
+  community.docker.docker_container:
+    name: homer
+    image: "b4bz/homer"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/homer/assets:/www/assets:rw"
+    env:
+      "UID": "{{ username_uid | string }}"
+      "GID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+    restart_policy: unless-stopped
+
+- name: Create Homer Container with Traefik Labels
+  become: true
+  become_user: "{{ username }}"
+  when: enable_traefik
+  community.docker.docker_container:
+    name: homer
+    image: "b4bz/homer"
+    pull: true
+    state: started
+    volumes:
+      - "{{ docker_data_path }}/homer/assets:/www/assets:rw"
+    env:
+      "UID": "{{ username_uid | string }}"
+      "GID": "{{ username_gid | string }}"
+      "TZ": "{{ timezone }}"
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ docker_proxy_network }}"
+    labels:
+      "traefik.enable": "true"
+      "traefik.http.routers.homer.entrypoints": "http"
+      "traefik.http.routers.homer.rule": "Host(`homer.{{ dns_domain_name }}`)"
+      "traefik.http.middlewares.homer-https-redirect.redirectscheme.scheme": "https"
+      "traefik.http.routers.homer.middlewares": "homer-https-redirect"
+      "traefik.http.routers.homer-secure.entrypoints": "https"
+      "traefik.http.routers.homer-secure.rule": "Host(`homer.{{ dns_domain_name }}`)"
+      "traefik.http.routers.homer-secure.tls": "true"
+      "traefik.http.routers.homer-secure.service": "homer"
+      "traefik.http.services.homer.loadbalancer.server.port": "8080"
+      "traefik.docker.network": "{{ docker_proxy_network }}"

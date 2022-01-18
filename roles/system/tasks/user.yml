@@ -1,0 +1,75 @@
+---
+- name: Ensure group "{{ username }}" exists
+  become: true
+  group:
+    name: "{{ username }}"
+    gid: "{{ username_gid }}"
+    state: present
+
+- name: Make sure we have a 'wheel' group
+  group:
+    name: wheel
+    state: present
+
+- name: Ensure user is present
+  become: true
+  user:
+    name: "{{ username }}"
+    password: "{{ password | password_hash('sha512') }}"
+    group: "{{ username }}"
+    uid: "{{ username_uid }}"
+    groups:
+      - wheel
+      - users
+    shell: /bin/bash
+    state: present
+    append: true
+    update_password: on_create
+
+- name: Ensure group sambashare exists
+  when: enable_samba | default(false)
+  become: true
+  group:
+    name: sambashare
+    state: present
+
+- name: Append the samba group
+  when: enable_samba | default(false)
+  become: true
+  user:
+    name: "{{ username }}"
+    groups:
+      - sambashare
+    append: true
+
+- name: Allow 'wheel' group to have passwordless sudo
+  become: true
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Copy the public ssh key
+  become: true
+  when: enable_ssh_authentification
+  authorized_key:
+    user: "{{ username }}"
+    state: present
+    key: "{{ ssh_public_key }}"
+
+- name: Set the default shell
+  user:
+     name: "{{ username }}"
+     shell: "{{ shell }}"
+
+- name: Suppress login messages
+  become: true
+  become_user: "{{ username }}"
+  file:
+    name: /home/{{ username }}/.hushlogin
+    mode: 0644
+    state: touch
+    modification_time: preserve
+    access_time: preserve
