@@ -1,10 +1,10 @@
 ---
 - name: "Check if snap is installed"
   package_facts:
-    manager: "auto"
+    manager: apt
 
 - name: Remove snap functionality
-  when: ("'snapd' in ansible_facts.packages") and (enable_snap | default(false))
+  when: ("'snapd' in ansible_facts.packages") and (not enable_snap | default(false))
   block:
   - name: "Disable Snapd Service"
     ansible.builtin.service:
