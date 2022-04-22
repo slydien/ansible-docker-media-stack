@@ -13,7 +13,6 @@
       enabled: false
 
   - name: "Uninstall Snapd"
-    when: disable_snapd_uninstall_snapd | bool
     ansible.builtin.apt:
       pkg: snapd
       state: absent
