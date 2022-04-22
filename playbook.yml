@@ -2,13 +2,7 @@
 - hosts: all
   become: true
 
-  pre_tasks:
-    - import_tasks: tasks/ssh_juggle_port.yml
-
   tasks:
-    - name: Include the system role
-      include_role:
-        name: system
     - name: Include the geerlingguy.repo-epel role for Redhat
       include_role:
         name: geerlingguy.repo-epel

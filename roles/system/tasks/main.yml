@@ -1,5 +1,0 @@
----
-- include_tasks: essential.yml
-- include_tasks: remove_snap.yml
-- include_tasks: user.yml
-- include_tasks: dotfiles.yml
