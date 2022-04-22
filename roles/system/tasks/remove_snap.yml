@@ -6,27 +6,14 @@
 - name: Remove snap functionality
   when: ("'snapd' in ansible_facts.packages") and (enable_snap | default(false))
   block:
-  - name: Unmount the core* snaps
-    mount:
-      name: "/snap/core*"
-      state: unmounted
+  - name: "Disable Snapd Service"
+    ansible.builtin.service:
+      name: snapd
+      state: stopped
+      enabled: false
 
-  - name: Remove the pre-installed snaps
-    community.general.snap:
-      name: "*"
+  - name: "Uninstall Snapd"
+    when: disable_snapd_uninstall_snapd | bool
+    ansible.builtin.apt:
+      pkg: snapd
       state: absent
-
-  - name: Remove the snap package from apt
-    apt:
-      package: snapd
-      state: absent
-      purge: yes
-
-  - name: Remove the snap folders
-    file:
-      name: "{{ item }}"
-      state: absent
-    with_items:
-      - /home/{{ username }}/snap
-      - /var/snap
-      - /var/lib/snap
