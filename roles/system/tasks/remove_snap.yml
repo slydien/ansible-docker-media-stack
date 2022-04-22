@@ -12,7 +12,7 @@
       state: unmounted
 
   - name: Remove the pre-installed snaps
-    snap:
+    community.general.snap:
       name: "*"
       state: absent
 

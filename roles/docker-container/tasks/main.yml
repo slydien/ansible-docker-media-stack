@@ -1,4 +1,5 @@
 ---
+- pip: name=docker state=present
 - include_tasks: traefik.yml
   when: enable_traefik | default(false)
 - include_tasks: homer.yml
