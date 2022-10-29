@@ -1,0 +1,54 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+
+  tasks:
+    # - name: Test HTTP connection to Homer
+    #   uri:
+    #     url: http://localhost:8080
+    #     return_content: true
+    #   register: homer
+    #   failed_when: "'font awesome' not in homer.content"
+
+    - name: Test HTTP connection to Portainer
+      uri:
+        url: http://localhost:9000
+        return_content: true
+      register: portainer
+      failed_when: "'portainer' not in portainer.content"
+
+    - name: Test HTTP connection to Prowlarr
+      uri:
+        url: http://localhost:9696
+        return_content: true
+      register: prowlarr
+      failed_when: "'Prowlarr' not in prowlarr.content"
+
+    - name: Test HTTP connection to Radarr
+      uri:
+        url: http://localhost:7878
+        return_content: true
+      register: homer
+      failed_when: "'Radarr' not in homer.content"
+
+    - name: Test HTTP connection to Sonarr
+      uri:
+        url: http://localhost:8989
+        return_content: true
+      register: sonarr
+      failed_when: "'Sonarr' not in sonarr.content"
+
+    # - name: Test HTTP connection to Transmission
+    #   uri:
+    #     url: http://localhost:9091
+    #     return_content: true
+    #   register: transmission
+    #   failed_when: "'font awesome' not in transmission.content"
+
+    - name: Test HTTP connection to Overseerr
+      uri:
+        url: http://localhost:5055
+        return_content: true
+      register: overseerr
+      failed_when: "'Overseerr' not in overseerr.content"

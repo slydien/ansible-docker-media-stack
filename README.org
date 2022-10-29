@@ -1,8 +1,13 @@
 #+TITLE: Docker Media Stack Server via Ansible
-#+OPTIONS: toc:2          (only include two levels in TOC)
+#+OPTIONS: toc:2            (only include two levels in TOC)
+#+HUGO_BASE_DIR: /home/lydien/Site/
+#+HUGO_SECTION: howtos
+
+#+DATE: 16-04-2022
+#+HUGO_TAGS: devops homelab media ansible
 
 * General info
-This will setup Docker with various media automation containers (Sonarr, Radarr, Prowlarr..) on a Debian or RedHat server. This will also setup basic security features on the server.
+This will setup Docker with various media automation containers (Sonarr, Radarr, Prowlarr..) on a Debian or RedHat server.
 
 * Technologies
 Project created with:
@@ -33,9 +38,11 @@ git clone https://github.com/zedxlucian/ansible-docker-media-stack.git
 cd ansible-docker-media-stack
 #+end_src
 
-Now, you need to fill some variables before you can run this project. Open the file =group_vars/all= and change the values in the variable according to your needs. Now open the file =group_vars/secret.yml= and change the values.
+Now, you need to fill some variables before you can run this project. Open the file =group_vars/all= and change the values in the variable according to your needs. Now open the file =group_vars/all= and change the values.
 
-Now you need to encrypt =group_vars/secret.yml= because it contains sensitive informations. To do so, type this command:
+:warning: If you plan on pushing this into a github repository make sure to follow the next step.
+
+You need to encrypt =group_vars/all= because it contains sensitive informations. To do so, type this command:
 #+begin_src shell
 ansible-vault encrypt group_vars/secret.yml
 #+end_src
@@ -45,4 +52,4 @@ We can finally launch our ansible playbook to install our docker media stack:
 ansible-playbook -i hosts/<your-host-ip-address> playbook.yml --ask-vault-pass
 #+end_src
 
-Ansible will ask you to provide the password you used to encrypt =group_vars/secret.yml= file. Once entered, it will proceed with the playbook.
+If you encrypted your =group_vars/all= file Ansible will ask you to provide the password. Once entered, it will proceed with the playbook.

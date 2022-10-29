@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "ansible-docker-media-stack"
+version = "1.0.0"
+description = "Ansible playbook to install a full stack of containers to be able to automate your media library."
+authors = ["Lydien Sandanasamy <contact@slydien.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "ansible_docker_media_stack"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+ansible = "^6.5.0"
+molecule = "^4.0.3"
+molecule-docker = "^2.1.0"
+ansible-lint = "^6.8.4"
+yamllint = "^1.28.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
