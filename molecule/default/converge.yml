@@ -16,8 +16,8 @@
       changed_when: false
       failed_when: systemctl_status.rc > 1
 
-    - name: Update cache
-      apt:
-        update_cache: true
+    - name: Update apt cache.
+      apt: update_cache=yes cache_valid_time=600
+      when: ansible_os_family == 'Debian'e
 
 - import_playbook: ../../playbook.yml
