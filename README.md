@@ -7,18 +7,18 @@ This will setup Docker with various media automation containers (Sonarr, Radarr,
 # Technologies
 
 Project created with:
-    - Ansible version: 2.12.1
-    - Molecule version: 3.5.2
-    - Podman version: 3.2.1
-    - Molecule podman version: 1.0.1
-    - Docker version: 20.10.12
+* Ansible version: 2.12.1
+* Molecule version: 3.5.2
+* Podman version: 3.2.1
+* Molecule podman version: 1.0.1
+* Docker version: 20.10.12
+
 # TODO
-    - Add variables to enable/disable containers
-    - Find solution for labels if traefik container is disabled
-    - Complete this README
-    - Add *geerlingguy.security* role from Ansible galaxy
-    - Write ansible role for Crowdsec, a great replacement for fail2ban
-    - Add *no_log* parameter to tasks with sensitive informations
+
+* Find solution for labels if traefik container is disabled
+* Add *geerlingguy.security* role from Ansible galaxy
+* Write ansible role for Crowdsec, a great replacement for fail2ban
+* Add *no_log* parameter to tasks with sensitive informations
 
 # Setup
 ## Requirements
@@ -28,7 +28,7 @@ You need to install ansible before you can run this project. It's best to get th
 and then type this command into a terminal:
 
 ``` sh
-    pip install ansible
+pip install ansible
 ```
 
 ## Usage
@@ -36,8 +36,8 @@ and then type this command into a terminal:
 First clone the repository:
 
 ``` sh
-    git clone https://github.com/zedxlucian/ansible-docker-media-stack.git
-    cd ansible-docker-media-stack
+git clone https://github.com/zedxlucian/ansible-docker-media-stack.git
+cd ansible-docker-media-stack
 
 ```
 
@@ -48,13 +48,13 @@ Now, you need to fill some variables before you can run this project. Open the f
 You need to encrypt *group_vars/all* because it contains sensitive informations. To do so, type this command:
 
 ``` sh
-    ansible-vault encrypt group_vars/secret.yml
+ansible-vault encrypt group_vars/secret.yml
 ```
 
 We can finally launch our ansible playbook to install our docker media stack:
 
 ``` sh
-    ansible-playbook -i hosts/<your-host-ip-address> playbook.yml --ask-vault-pass
+ansible-playbook -i hosts/<your-host-ip-address> playbook.yml --ask-vault-pass
 ```
 
 If you encrypted your *group_vars/all* file Ansible will ask you to provide the password. Once entered, it will proceed with the playbook.
