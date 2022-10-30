@@ -16,4 +16,8 @@
       changed_when: false
       failed_when: systemctl_status.rc > 1
 
+    - name: Update cache
+      apt:
+        update_cache: true
+
 - import_playbook: ../../playbook.yml
