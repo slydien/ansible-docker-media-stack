@@ -1,7 +1,7 @@
 ---
 - name: Create Overseerr folder if enable_persistent_data is false
   when: not enable_persistent_data
-  file:
+  ansible.builtin.file:
     path: "{{ docker_data_path }}/overseerr/config"
     state: directory
     mode: 0765

@@ -1,7 +1,7 @@
 ---
 - name: Create Sonarr folder if enable_persistent_data is false
   when: not enable_persistent_data
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     mode: 0765

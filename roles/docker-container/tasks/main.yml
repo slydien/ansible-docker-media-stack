@@ -1,24 +1,39 @@
 ---
-- pip: name=docker state=present
-- include_tasks: traefik.yml
+- ansible.builtin.pip:
+    name: docker
+    state: present
+
+- ansible.builtin.include_tasks: traefik.yml
   when: enable_traefik | default(false)
-- include_tasks: homer.yml
+
+- ansible.builtin.include_tasks: homer.yml
   when: enable_homer | default(false)
-- include_tasks: portainer.yml
+
+- ansible.builtin.include_tasks: portainer.yml
   when: enable_portainer | default(false)
-- include_tasks: watchtower.yml
+
+- ansible.builtin.include_tasks: watchtower.yml
   when: enable_watchtower | default(false)
-- include_tasks: flaresolverr.yml
+
+- ansible.builtin.include_tasks: flaresolverr.yml
   when: enable_flaresolverr | default(false)
-- include_tasks: vaultwarden.yml
+
+- ansible.builtin.include_tasks: vaultwarden.yml
   when: enable_vaultwarden | default(false)
-- include_tasks: transmission-openvpn.yml
+
+- ansible.builtin.include_tasks: transmission-openvpn.yml
   when: enable_transmission_openvpn | default(false)
-- include_tasks: sonarr.yml
+
+- ansible.builtin.include_tasks: sonarr.yml
   when: enable_sonarr | default(false)
-- include_tasks: radarr.yml
+
+- ansible.builtin.include_tasks: radarr.yml
   when: enable_radarr | default(false)
-- include_tasks: prowlarr.yml
+
+- ansible.builtin.include_tasks: prowlarr.yml
   when: enable_prowlarr | default(false)
-- include_tasks: overseerr.yml
+
+- ansible.builtin.include_tasks: overseerr.yml
   when: enable_overseerr | default(false)
+
+  

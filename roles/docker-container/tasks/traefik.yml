@@ -10,7 +10,7 @@
   when: not enable_persistent_data
   block:
   - name: Create Traefik data folder
-    file:
+    ansible.builtin.file:
       path: "{{ docker_data_path }}/traefik/data"
       state: directory
       mode: 0765
@@ -18,7 +18,7 @@
       group: "{{ username }}"
 
   - name: Stat over traefik.yml & config.yml
-    stat:
+    ansible.builtin.stat:
       path: "{{ my_loop }}"
     loop:
       - "{{ docker_data_path }}/traefik/data/traefik.yml"
@@ -28,7 +28,7 @@
     register: my_stat_var
 
   - name: Create the files if they don't exist
-    file:
+    ansible.builtin.file:
       path: "{{ item.my_loop }}"
       owner: "{{ username }}"
       group: "{{ username }}"
@@ -37,12 +37,12 @@
     loop: "{{ my_stat_var.results }}"
 
   - name: Check if acme.json exists in Traefik data folder
-    stat:
+    ansible.builtin.stat:
       path: "{{ docker_data_path }}/traefik/data/acme.json"
     register: acme_file
 
   - name: Create acme.json file in data folder
-    file:
+    ansible.builtin.file:
       path: "{{ docker_data_path }}/traefik/data/acme.json"
       state: "{{ 'file' if acme_file.stat.exists else 'touch' }}"
       mode: 0600

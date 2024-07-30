@@ -1,7 +1,7 @@
 ---
 - name: Create Prowlarr folder if enable_persistent_data is false
   when: not enable_persistent_data
-  file:
+  ansible.builtin.file:
     path: "{{ docker_data_path }}/prowlarr/config"
     state: directory
     mode: 0765

@@ -1,7 +1,7 @@
 ---
 - name: Create Homer data folder when enable_persistent_data is false
   when: not enable_persistent_data
-  file:
+  ansible.builtin.file:
     path: "{{ docker_data_path }}/homer/assets"
     state: directory
     mode: 0765

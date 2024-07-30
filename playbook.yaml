@@ -1,18 +1,22 @@
 ---
-- hosts: all
+- name: Play | Ansible Docker Media Stack
+  hosts: all
   become: true
 
   tasks:
     - name: Include the geerlingguy.repo-epel role for Redhat
-      include_role:
+      ansible.builtin.include_role:
         name: geerlingguy.repo-epel
       when: ansible_os_family == 'Redhat'
+
     - name: Include the geerlingguy.pip role
-      include_role:
+      ansible.builtin.include_role:
         name: geerlingguy.pip
+
     - name: Include the geerlingguy.docker role
-      include_role:
+      ansible.builtin.include_role:
         name: geerlingguy.docker
+
     - name: Include the docker-container role
-      include_role:
+      ansible.builtin.include_role:
         name: docker-container
